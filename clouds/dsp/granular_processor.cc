@@ -53,6 +53,24 @@ void GranularProcessor::Init(
   num_channels_ = 2;
   low_fidelity_ = false;
   bypass_ = false;
+
+  playback_mode_ = PLAYBACK_MODE_GRANULAR;
+  silence_ = false;
+  freeze_lp_ = 0.0f;
+
+  parameters_ = Parameters{}; // Value-initialization
+  persistent_state_ = PersistentState{};  // Value-initialization
+
+  for (auto& frame : fb_) {
+    frame = FloatFrame{};
+  }
+
+  for (auto& channel : tail_buffer_) {
+    for (auto& sample : channel) {
+      sample = 0;
+    }
+  }
+
   
   src_down_.Init();
   src_up_.Init();

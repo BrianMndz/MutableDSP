@@ -65,6 +65,7 @@ class GranularSamplePlayer {
     num_grains_ = 0.0f;
     num_channels_ = num_channels;
     grain_size_hint_ = 1024.0f;
+    grain_rate_phasor_ = 0.0f;
   }
   
   template<Resolution resolution>

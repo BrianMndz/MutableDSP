@@ -40,6 +40,12 @@ void Correlator::Init(uint32_t* source, uint32_t* destination) {
   offset_ = 0;
   best_match_ = 0;
   done_ = true;
+
+  increment_ = 0;
+  size_ = 0;
+  candidate_ = 0;
+  best_score_ = 0;
+  trace_ = 0;
 }
 
 void Correlator::EvaluateNextCandidate() {
@@ -57,7 +63,10 @@ void Correlator::EvaluateNextCandidate() {
     uint32_t source_bits = source[i];
     uint32_t destination_bits = 0;
     destination_bits |= destination[i] << offset_bits;
-    destination_bits |= destination[i + 1] >> (32 - offset_bits);
+    // A shift by 32 is undefined in C++; the module's Cortex-M4 yields 0.
+    if (offset_bits) {
+      destination_bits |= destination[i + 1] >> (32 - offset_bits);
+    }
     uint32_t count = ~(source_bits ^ destination_bits);
     count = count - ((count >> 1) & 0x55555555);
     count = (count & 0x33333333) + ((count >> 2) & 0x33333333);
