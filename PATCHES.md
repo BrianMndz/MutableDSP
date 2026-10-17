@@ -14,6 +14,42 @@ later change to an imported file is listed here under its module.
 Status: no modifications to imported DSP source.
 Upstream commits: Eurorack `f4cfa769...`, stmlib `e3bd7c9c...`.
 
+## Build files
+
+`CMakeLists.txt` is not imported; upstream builds with Makefiles for the
+STM32. These notes record why it is set up as it is.
+
+### C++14 language requirement
+
+- Origin: CloudsDSP commit `165ebde`, where it replaced a public `cxx_std_17`.
+- Classification: build-only.
+- Problem: a public `cxx_std_17` requirement forces every consumer to compile
+  as C++17, but the Bela board's Clang 3.9 cannot build Clouds as C++17. That
+  compiler rejects the array template argument in `granular_processor.h`
+  (`src_filter_1x_2_45`) in C++1z mode as a pointer to a subobject, while
+  accepting it in C++14 mode.
+- Change: every library requires `cxx_std_14` publicly and compiles its own
+  sources as C++14 (`CXX_STANDARD 14`, no extensions), as the board does.
+  Consumers may still compile as C++17.
+- Verification:
+    - All imported sources pass a Clang 3.9 `-std=c++14` syntax check against
+      Debian 9 armhf headers (CloudsDSP).
+    - CloudsEngine's four quality renders were byte-identical before and after
+      CloudsDSP's change; stereo/16-bit/32-kHz remains
+      `9b9c09ee3a612eab0226b0e4214f7f10448d7d1be1b57d21f93d9566b06298e3`.
+    - With Apple Clang `-O3` on arm64, all ten object files are
+      byte-identical between this repository's libraries, CloudsDSP's
+      `clouds_dsp` compiled as C++14, and `clouds_dsp` compiled as C++17.
+
+### Shared stmlib target
+
+- Classification: build-only.
+- Change: stmlib's sources form their own library, `MutableDSP::stmlib`, which
+  owns the include directory and `TEST=1`; each module's library links it.
+  CloudsDSP compiled them into `clouds_dsp`.
+- Reason: with a second module, two libraries each compiling stmlib would
+  define its symbols twice.
+
 ## clouds
 
 The patches below were made in CloudsDSP (`github.com/BrianMndz/CloudsDSP`)
